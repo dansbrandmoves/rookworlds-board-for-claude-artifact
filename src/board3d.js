@@ -181,16 +181,28 @@ export async function createBoard3D(host, assets) {
     }
   }
 
+  // The camera stands on the player's side at a fixed angle and comes as close as it can while the whole frame and the
+  // tops of the far pieces stay in view, whatever the box's shape: the board fills the box (the owner, 2026-10-30).
+  const EDGES = []
+  for (const x of [-FRAME_HALF, FRAME_HALF]) for (const z of [-FRAME_HALF, FRAME_HALF]) EDGES.push(new Vector3(x, 0, z), new Vector3(x, BOARD_ELEV, z))
+  for (const x of [-3.5, 3.5]) EDGES.push(new Vector3(x, 1.9, -3.5)) // a king's top on the far rank
+  const TILT = 0.88 // radians above the board: a player's view, every square readable
+  const AIM = new Vector3(0, 0, 0.35)
+  function place(d) {
+    camera.position.set(0, AIM.y + d * Math.sin(TILT), AIM.z + d * Math.cos(TILT))
+    camera.lookAt(AIM)
+    camera.updateMatrixWorld()
+    camera.updateProjectionMatrix()
+  }
+  const fits = (margin) => EDGES.every((p) => { const v = p.clone().project(camera); return Math.abs(v.x) <= margin && Math.abs(v.y) <= margin })
   function frameCamera() {
     const w = host.clientWidth || 400, h = host.clientHeight || 340
     renderer.setSize(w, h, false)
     camera.aspect = w / h
-    // from the player's side, high enough to read every square, the whole frame in view
-    const portrait = w / h < 1.05
-    camera.fov = portrait ? 44 : 38
-    camera.position.set(0, portrait ? 13.4 : 11.6, portrait ? 10.6 : 9.6)
-    camera.lookAt(0, 0, 0.5)
-    camera.updateProjectionMatrix()
+    camera.fov = 36
+    let lo = 4, hi = 60
+    for (let i = 0; i < 24; i++) { const mid = (lo + hi) / 2; place(mid); if (fits(0.97)) hi = mid; else lo = mid }
+    place(hi)
   }
 
   let pending = false
