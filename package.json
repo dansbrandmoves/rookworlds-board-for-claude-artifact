@@ -1,0 +1,33 @@
+{
+  "name": "rookworlds-board-for-claude-artifact",
+  "version": "1.0.0",
+  "description": "The RookWorlds wooden chessboard as one script any page or Claude artifact can load: 3D board, gliding pieces, game review, notes, and Stockfish analysis and play on the viewer's own device.",
+  "main": "dist/board.js",
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE.md"
+  ],
+  "scripts": {
+    "build": "node scripts/build.mjs"
+  },
+  "keywords": [
+    "chess",
+    "chessboard",
+    "3d",
+    "three",
+    "stockfish",
+    "claude",
+    "artifact"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dansbrandmoves/rookworlds-board-for-claude-artifact.git"
+  },
+  "homepage": "https://www.rookworlds.com",
+  "license": "SEE LICENSE IN LICENSE.md",
+  "devDependencies": {
+    "chess.js": "1.4.0",
+    "three": "0.184.0"
+  }
+}
