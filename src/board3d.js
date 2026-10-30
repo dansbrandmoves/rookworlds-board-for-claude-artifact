@@ -191,12 +191,15 @@ export async function createBoard3D(host, assets) {
   const TILT = 0.88 // radians above the board: a player's view, every square readable
   const AIM = new Vector3(0, 0, 0.35)
   // the view the player has turned to (drag to turn, pinch or wheel to zoom); resetView() goes back to the player's
-  let view = { az: 0, tilt: TILT, zoom: 1 }
+  // tilt null: the automatic angle for the box's shape (steeper on a tall phone screen, so the board fills its height)
+  let view = { az: 0, tilt: null, zoom: 1 }
+  let autoTilt = TILT
   let onView = null
-  const turned = () => Math.abs(view.az) > 0.01 || Math.abs(view.tilt - TILT) > 0.01 || Math.abs(view.zoom - 1) > 0.01
+  const turned = () => Math.abs(view.az) > 0.01 || view.tilt != null || Math.abs(view.zoom - 1) > 0.01
   function place(d) {
-    const c = Math.cos(view.tilt)
-    camera.position.set(AIM.x + d * Math.sin(view.az) * c, AIM.y + d * Math.sin(view.tilt), AIM.z + d * Math.cos(view.az) * c)
+    const tilt = view.tilt ?? autoTilt
+    const c = Math.cos(tilt)
+    camera.position.set(AIM.x + d * Math.sin(view.az) * c, AIM.y + d * Math.sin(tilt), AIM.z + d * Math.cos(view.az) * c)
     camera.lookAt(AIM)
     camera.updateMatrixWorld()
     camera.updateProjectionMatrix()
@@ -207,6 +210,7 @@ export async function createBoard3D(host, assets) {
     renderer.setSize(w, h, false)
     camera.aspect = w / h
     camera.fov = 36
+    autoTilt = Math.max(TILT, Math.min(1.08, TILT + (h / w - 1) * 0.3))
     let lo = 4, hi = 60
     for (let i = 0; i < 24; i++) { const mid = (lo + hi) / 2; place(mid); if (fits(0.97)) hi = mid; else lo = mid }
     place(hi * view.zoom)
@@ -236,7 +240,7 @@ export async function createBoard3D(host, assets) {
       if (!dragged && Math.hypot(e.clientX - p.x0, e.clientY - p.y0) < 7) return
       dragged = true
       view.az -= dx * 0.009
-      if (e.pointerType === 'mouse') view.tilt = Math.max(0.3, Math.min(1.45, view.tilt + dy * 0.006))
+      if (e.pointerType === 'mouse') view.tilt = Math.max(0.3, Math.min(1.45, (view.tilt ?? autoTilt) + dy * 0.006))
     }
     frameCamera(); draw(); onView && onView(turned())
   })
@@ -249,7 +253,7 @@ export async function createBoard3D(host, assets) {
     view.zoom = Math.max(0.55, Math.min(1.7, view.zoom * Math.exp(e.deltaY * 0.0012)))
     frameCamera(); draw(); onView && onView(turned())
   }, { passive: false })
-  function resetView() { view = { az: 0, tilt: TILT, zoom: 1 }; frameCamera(); draw(); onView && onView(false) }
+  function resetView() { view = { az: 0, tilt: null, zoom: 1 }; frameCamera(); draw(); onView && onView(false) }
 
   let pending = false
   const draw = () => {
