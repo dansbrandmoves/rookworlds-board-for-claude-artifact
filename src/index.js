@@ -144,6 +144,7 @@ const scoreText = (i) => !i ? '' : i.mate != null ? `${i.mate > 0 ? 'White' : 'B
  *   analyse: true                  show "Analyse this position" (default true)
  *   sound: true                    start with sound on (it is otherwise a button)
  *   onMove(info)                   called on every move made in play mode: { san, fen, pgn }
+ * Drag turns the board (and tilts it, with a mouse), pinch or the wheel zooms; "Reset view" goes back.
  * Returns { goTo(ply), next(), prev(), move(san), fen(), pgn(), flip() }. move('e4') plays the viewer's move in play mode
  * (Stockfish then answers), as a tap would.
  */
@@ -183,7 +184,7 @@ export function board(target, opts = {}) {
   // the page
   host.innerHTML = `<div class="rwb">
     <div class="rwb-top"><span class="rwb-brand">RookWorlds</span><span class="rwb-title"></span><span class="rwb-turn"></span>
-      <button class="rwb-small rwb-sound">Sound</button><button class="rwb-small rwb-flip">Flip</button></div>
+      <button class="rwb-small rwb-reset" style="display:none">Reset view</button><button class="rwb-small rwb-sound">Sound</button><button class="rwb-small rwb-flip">Flip</button></div>
     <div class="rwb-stage"><div class="rwb-wait">Setting up the board…</div></div>
     <div class="rwb-nav"><button class="rwb-first">&laquo;</button><button class="rwb-prev">&lsaquo;</button><span class="rwb-ply"></span><button class="rwb-next">&rsaquo;</button><button class="rwb-last">&raquo;</button></div>
     <div class="rwb-strip"></div>
@@ -294,9 +295,6 @@ export function board(target, opts = {}) {
       $('analyse').disabled = false
     }
   }
-  let sx = null
-  $('stage').addEventListener('touchstart', (e) => { sx = e.touches[0].clientX }, { passive: true })
-  $('stage').addEventListener('touchend', (e) => { if (sx == null || play) return; const dx = e.changedTouches[0].clientX - sx; sx = null; if (Math.abs(dx) > 40) goTo(at + (dx < 0 ? 1 : -1)) })
   host.tabIndex = 0
   host.addEventListener('keydown', (e) => { if (play) return; if (e.key === 'ArrowRight') goTo(at + 1); else if (e.key === 'ArrowLeft') goTo(at - 1) })
 
@@ -305,6 +303,8 @@ export function board(target, opts = {}) {
     three = b
     $('wait').remove()
     $('stage').addEventListener('click', (e) => { const sq = b.pick(e.clientX, e.clientY); if (sq) tap(sq) })
+    b.onViewChange((t) => { $('reset').style.display = t ? '' : 'none' })
+    $('reset').onclick = () => b.resetView()
     draw(false)
     reply()
   }).catch((e) => { $('wait').textContent = 'The 3D board cannot draw here: ' + (e && e.message || e) })

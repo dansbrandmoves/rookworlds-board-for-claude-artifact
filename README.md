@@ -49,7 +49,8 @@ Play against Stockfish instead: `RookWorlds.board('#board', { mode: 'play', side
 
 ## What runs where
 - **The board** (`dist/board.js`, ~650KB): three.js, chess.js and the board, one plain script exposing
-  `window.RookWorlds`. Pieces glide, the last move is marked in gold, swipe or arrow keys step through a game.
+  `window.RookWorlds`. Pieces glide, the last move is marked in gold, arrow keys or the strip step through a game. Drag turns the board
+  (and tilts it, with a mouse), pinch or the wheel zooms, "Reset view" goes back; letters and numbers follow Flip.
 - **The wood and the piece set** (`dist/assets.js`, ~5.5MB, loaded by board.js from beside itself): base64, decoded
   in the page, so nothing needs network or image permissions (artifacts may have neither).
 - **Stockfish** (10, pure JavaScript) from the public `stockfish@10.0.2` npm package on jsDelivr, loaded the first time

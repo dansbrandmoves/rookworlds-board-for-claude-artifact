@@ -53,19 +53,21 @@ function squareXZ(sq, side) {
   return side === 'black' ? [3.5 - f, r - 3.5] : [f - 3.5, 3.5 - r]
 }
 
-/** one rank or file letter, engraved on the frame in pale maple */
+/** one rank or file letter, set into the frame the way the web app does it: a plain sans-serif, small, in a soft
+ *  maple tone that sits in the wood rather than on it (the owner, 2026-10-30: the serif letters were too distracting) */
 function label(text) {
   const c = document.createElement('canvas')
-  c.width = c.height = 64
+  c.width = c.height = 128
   const g = c.getContext('2d')
-  g.fillStyle = '#F1E2BC'
-  g.font = '700 44px Georgia, serif'
+  g.fillStyle = 'rgba(226, 204, 160, 0.78)'
+  g.font = '500 58px Inter, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif'
   g.textAlign = 'center'
   g.textBaseline = 'middle'
-  g.fillText(text, 32, 34)
+  g.fillText(text, 64, 68)
   const t = new CanvasTexture(c)
   t.colorSpace = SRGBColorSpace
-  const m = new Mesh(new PlaneGeometry(0.42, 0.42), new MeshStandardMaterial({ map: t, transparent: true, roughness: 0.9, depthWrite: false }))
+  t.anisotropy = 4
+  const m = new Mesh(new PlaneGeometry(0.42, 0.42), new MeshStandardMaterial({ map: t, transparent: true, roughness: 0.95, depthWrite: false }))
   m.rotation.x = -Math.PI / 2
   return m
 }
@@ -188,8 +190,13 @@ export async function createBoard3D(host, assets) {
   for (const x of [-3.5, 3.5]) EDGES.push(new Vector3(x, 1.9, -3.5)) // a king's top on the far rank
   const TILT = 0.88 // radians above the board: a player's view, every square readable
   const AIM = new Vector3(0, 0, 0.35)
+  // the view the player has turned to (drag to turn, pinch or wheel to zoom); resetView() goes back to the player's
+  let view = { az: 0, tilt: TILT, zoom: 1 }
+  let onView = null
+  const turned = () => Math.abs(view.az) > 0.01 || Math.abs(view.tilt - TILT) > 0.01 || Math.abs(view.zoom - 1) > 0.01
   function place(d) {
-    camera.position.set(0, AIM.y + d * Math.sin(TILT), AIM.z + d * Math.cos(TILT))
+    const c = Math.cos(view.tilt)
+    camera.position.set(AIM.x + d * Math.sin(view.az) * c, AIM.y + d * Math.sin(view.tilt), AIM.z + d * Math.cos(view.az) * c)
     camera.lookAt(AIM)
     camera.updateMatrixWorld()
     camera.updateProjectionMatrix()
@@ -202,8 +209,47 @@ export async function createBoard3D(host, assets) {
     camera.fov = 36
     let lo = 4, hi = 60
     for (let i = 0; i < 24; i++) { const mid = (lo + hi) / 2; place(mid); if (fits(0.97)) hi = mid; else lo = mid }
-    place(hi)
+    place(hi * view.zoom)
   }
+
+  // turning the board: a drag turns it (sideways) and tilts it (up and down, with a mouse; on a touch screen up and
+  // down still scrolls the page), two fingers or the wheel zoom. A drag is never taken for a tap on a square.
+  const el = renderer.domElement
+  el.style.touchAction = 'pan-y'
+  const pointers = new Map()
+  let dragged = false, pinch = null
+  el.addEventListener('pointerdown', (e) => {
+    pointers.set(e.pointerId, { x: e.clientX, y: e.clientY, x0: e.clientX, y0: e.clientY })
+    dragged = false
+    if (pointers.size === 2) { const [a, b] = [...pointers.values()]; pinch = { d: Math.hypot(a.x - b.x, a.y - b.y), zoom: view.zoom } }
+  })
+  el.addEventListener('pointermove', (e) => {
+    const p = pointers.get(e.pointerId)
+    if (!p) return
+    const dx = e.clientX - p.x, dy = e.clientY - p.y
+    p.x = e.clientX; p.y = e.clientY
+    if (pointers.size === 2 && pinch) {
+      const [a, b] = [...pointers.values()]
+      view.zoom = Math.max(0.55, Math.min(1.7, pinch.zoom * pinch.d / Math.max(1, Math.hypot(a.x - b.x, a.y - b.y))))
+      dragged = true
+    } else {
+      if (!dragged && Math.hypot(e.clientX - p.x0, e.clientY - p.y0) < 7) return
+      dragged = true
+      view.az -= dx * 0.009
+      if (e.pointerType === 'mouse') view.tilt = Math.max(0.3, Math.min(1.45, view.tilt + dy * 0.006))
+    }
+    frameCamera(); draw(); onView && onView(turned())
+  })
+  const up = (e) => { pointers.delete(e.pointerId); if (pointers.size < 2) pinch = null }
+  el.addEventListener('pointerup', up)
+  el.addEventListener('pointercancel', up)
+  el.addEventListener('click', (e) => { if (dragged) { e.stopPropagation(); dragged = false } }, true)
+  el.addEventListener('wheel', (e) => {
+    e.preventDefault()
+    view.zoom = Math.max(0.55, Math.min(1.7, view.zoom * Math.exp(e.deltaY * 0.0012)))
+    frameCamera(); draw(); onView && onView(turned())
+  }, { passive: false })
+  function resetView() { view = { az: 0, tilt: TILT, zoom: 1 }; frameCamera(); draw(); onView && onView(false) }
 
   let pending = false
   const draw = () => {
@@ -313,6 +359,9 @@ export async function createBoard3D(host, assets) {
   return {
     show,
     pick,
+    resetView,
+    /** called with true when the player has turned the view, false when it is back to theirs */
+    onViewChange(fn) { onView = fn },
     screenOf,
     resize: onResize,
     dispose() {
