@@ -93,29 +93,31 @@ function tock(capture, check) {
 }
 
 const CSS = `
-.rwb{--gold:#C9A24B;font:13px/1.4 system-ui,-apple-system,sans-serif;color:#e8e2d6;background:#14110c;border-radius:12px;padding:10px;max-width:520px;margin:0 auto;box-sizing:border-box}
+.rwb{--gold:#C9A24B;--quiet:#8a8172;font:12px/1.4 system-ui,-apple-system,"Segoe UI",sans-serif;color:#e8e2d6;background:#14110c;border-radius:10px;padding:6px 10px 8px;max-width:640px;margin:0 auto;box-sizing:border-box}
 .rwb *{box-sizing:border-box}
-.rwb-top{display:flex;align-items:baseline;gap:8px;margin-bottom:6px}
-.rwb-brand{font-family:Georgia,serif;color:var(--gold);font-size:15px;white-space:nowrap}
-.rwb-title{flex:1;min-width:0;color:#cfc6b6;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.rwb-turn{color:#a59c8c;font-size:11px;white-space:nowrap}
-.rwb button{font:inherit;cursor:pointer;background:#1f1a12;border:1px solid #3a3226;color:#e8e2d6;border-radius:8px;padding:6px 10px}
-.rwb-small{font-size:11px!important;padding:1px 7px!important;border-radius:6px!important;color:#a59c8c!important}
-.rwb-small.on{color:var(--gold)!important;border-color:var(--gold)!important}
-.rwb-stage{position:relative;width:100%;aspect-ratio:1/.86;border-radius:8px;overflow:hidden;touch-action:pan-y}
-.rwb-wait{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#a59c8c;font-size:12px}
-.rwb-nav{display:flex;gap:6px;margin-top:8px;align-items:center}
-.rwb-ply{flex:1;text-align:center}
-.rwb-strip{display:flex;gap:4px;overflow-x:auto;margin-top:8px;padding-bottom:4px;scrollbar-width:none}
-.rwb-strip button{flex:none;padding:3px 6px;font-size:12px;border-radius:6px;color:#cfc6b6}
-.rwb-strip .mistake{border-color:#b7791f;color:#f0c674}.rwb-strip .blunder{border-color:#c0392b;color:#f19a8f}
-.rwb-strip .on{background:var(--gold);color:#1a1408;border-color:var(--gold)}
-.rwb-strip .noted::after{content:'•';color:var(--gold);margin-left:3px}
-.rwb-note{margin-top:8px;padding:8px 10px;border-left:2px solid var(--gold);background:#1b1610;border-radius:4px;white-space:pre-wrap;display:none}
+.rwb button{font:inherit;cursor:pointer;background:none;border:0;color:var(--quiet);padding:2px 5px;border-radius:4px}
+.rwb button:hover{color:#e8e2d6}
+.rwb button:disabled{opacity:.4}
+.rwb-top{display:flex;align-items:baseline;gap:2px;margin-bottom:2px}
+.rwb-brand{display:none}
+.rwb-title{flex:1;min-width:0;color:#b9b0a1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rwb-turn{color:var(--quiet);white-space:nowrap;margin-right:4px}
+.rwb-small.on,.rwb-reset{color:var(--gold)!important}
+.rwb-stage{position:relative;width:100%;aspect-ratio:1/.82;border-radius:6px;overflow:hidden;touch-action:pan-y}
+.rwb-wait{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--quiet)}
+.rwb-nav{display:flex;gap:2px;margin-top:4px;align-items:center}
+.rwb-nav button{font-size:13px}
+.rwb-ply{flex:1;text-align:center;color:#b9b0a1}
+.rwb-strip{display:flex;gap:1px;overflow-x:auto;margin-top:4px;padding-bottom:2px;scrollbar-width:none}
+.rwb-strip button{flex:none;padding:2px 4px;font-size:11px;color:#9d9485}
+.rwb-strip .mistake{color:#e0b860}.rwb-strip .blunder{color:#ef8f84}
+.rwb-strip .on{color:var(--gold);box-shadow:inset 0 -1px 0 var(--gold)}
+.rwb-strip .noted::after{content:'•';color:var(--gold);margin-left:2px}
+.rwb-note{margin-top:6px;padding:6px 10px;border-left:2px solid var(--gold);color:#d8cfbf;white-space:pre-wrap;display:none}
 .rwb-note.show{display:block}
-.rwb-act{width:100%;margin-top:8px;background:var(--gold)!important;color:#1a1408!important;border:0!important;font-weight:600;padding:9px!important;border-radius:10px!important}
-.rwb-eval{margin-top:8px;color:var(--gold);font-weight:600;font-size:15px}
-.rwb-line,.rwb-status{color:#a59c8c;font-size:12px}
+.rwb-act{display:block;margin:4px auto 0;color:var(--gold)!important}
+.rwb-eval{margin-top:4px;color:var(--gold);font-weight:600;font-size:13px;text-align:center}
+.rwb-line,.rwb-status{color:var(--quiet);font-size:10.5px;text-align:center}
 `
 
 function plyOfLabel(label, sans) {
