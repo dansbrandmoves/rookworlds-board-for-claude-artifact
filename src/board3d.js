@@ -211,8 +211,13 @@ export async function createBoard3D(host, assets) {
     camera.aspect = w / h
     camera.fov = 36
     autoTilt = Math.max(TILT, Math.min(1.08, TILT + (h / w - 1) * 0.3))
+    // the distance is fitted from the player's own side and kept when the board is turned or tilted, so turning never
+    // shrinks it; at an angle its corners may run past the edges, as a zoom crops
+    const turnedTo = { az: view.az, tilt: view.tilt }
+    view.az = 0; view.tilt = null
     let lo = 4, hi = 60
     for (let i = 0; i < 24; i++) { const mid = (lo + hi) / 2; place(mid); if (fits(0.97)) hi = mid; else lo = mid }
+    view.az = turnedTo.az; view.tilt = turnedTo.tilt
     place(hi * view.zoom)
   }
 
@@ -222,13 +227,23 @@ export async function createBoard3D(host, assets) {
   el.style.touchAction = 'pan-y'
   const pointers = new Map()
   let dragged = false, pinch = null
+  // the wheel pressed in (a middle-button drag) zooms: up to come closer, down to step back; never the browser's autoscroll
+  let wheelDrag = null
+  el.addEventListener('mousedown', (e) => { if (e.button === 1) e.preventDefault() })
+  el.addEventListener('auxclick', (e) => { if (e.button === 1) e.preventDefault() })
   el.addEventListener('pointerdown', (e) => {
+    if (e.button === 1) { e.preventDefault(); wheelDrag = { y: e.clientY, zoom: view.zoom }; el.setPointerCapture?.(e.pointerId); return }
     snapping++ // a new touch stops a snap in progress
     pointers.set(e.pointerId, { x: e.clientX, y: e.clientY, x0: e.clientX, y0: e.clientY })
     dragged = false
     if (pointers.size === 2) { const [a, b] = [...pointers.values()]; pinch = { d: Math.hypot(a.x - b.x, a.y - b.y), zoom: view.zoom } }
   })
   el.addEventListener('pointermove', (e) => {
+    if (wheelDrag) {
+      view.zoom = Math.max(0.55, Math.min(1.7, wheelDrag.zoom * Math.exp((e.clientY - wheelDrag.y) * 0.006)))
+      frameCamera(); draw(); onView && onView(turned())
+      return
+    }
     const p = pointers.get(e.pointerId)
     if (!p) return
     const dx = e.clientX - p.x, dy = e.clientY - p.y
@@ -264,6 +279,7 @@ export async function createBoard3D(host, assets) {
     requestAnimationFrame(stepFrame)
   }
   const up = (e) => {
+    if (wheelDrag && e.button === 1) { wheelDrag = null; return }
     const wasTurn = pointers.size === 1 && !pinch && dragged
     pointers.delete(e.pointerId)
     if (pointers.size < 2) pinch = null
