@@ -223,6 +223,7 @@ export async function createBoard3D(host, assets) {
   const pointers = new Map()
   let dragged = false, pinch = null
   el.addEventListener('pointerdown', (e) => {
+    snapping++ // a new touch stops a snap in progress
     pointers.set(e.pointerId, { x: e.clientX, y: e.clientY, x0: e.clientX, y0: e.clientY })
     dragged = false
     if (pointers.size === 2) { const [a, b] = [...pointers.values()]; pinch = { d: Math.hypot(a.x - b.x, a.y - b.y), zoom: view.zoom } }
@@ -244,13 +245,40 @@ export async function createBoard3D(host, assets) {
     }
     frameCamera(); draw(); onView && onView(turned())
   })
-  const up = (e) => { pointers.delete(e.pointerId); if (pointers.size < 2) pinch = null }
+  // letting go after a turn eases the board to the nearest obvious view: either player's side, either side of the
+  // board, or a corner (every 45 degrees; the owner, 2026-10-30: "snap to obvious angles")
+  const STEP = Math.PI / 4
+  let snapping = 0
+  function snap() {
+    const from = view.az, to = Math.round(view.az / STEP) * STEP
+    if (Math.abs(to - from) < 0.001) { view.az = to; onView && onView(turned()); return }
+    const t0 = performance.now(), id = ++snapping
+    const stepFrame = (now) => {
+      if (id !== snapping) return
+      const k = Math.min(1, (now - t0) / 260), e = 1 - Math.pow(1 - k, 3)
+      view.az = from + (to - from) * e
+      frameCamera(); renderer.render(scene, camera)
+      if (k < 1) requestAnimationFrame(stepFrame)
+      else { view.az = to; onView && onView(turned()) }
+    }
+    requestAnimationFrame(stepFrame)
+  }
+  const up = (e) => {
+    const wasTurn = pointers.size === 1 && !pinch && dragged
+    pointers.delete(e.pointerId)
+    if (pointers.size < 2) pinch = null
+    if (wasTurn) snap()
+  }
   el.addEventListener('pointerup', up)
   el.addEventListener('pointercancel', up)
   el.addEventListener('click', (e) => { if (dragged) { e.stopPropagation(); dragged = false } }, true)
+  // the wheel zooms: a trackpad pinch (a wheel with ctrlKey) always, a plain scroll only when wheelZooms (full
+  // screen; in a chat, a plain scroll moves the conversation and must never be trapped by the board)
+  let wheelZooms = true
   el.addEventListener('wheel', (e) => {
+    if (!e.ctrlKey && !wheelZooms) return
     e.preventDefault()
-    view.zoom = Math.max(0.55, Math.min(1.7, view.zoom * Math.exp(e.deltaY * 0.0012)))
+    view.zoom = Math.max(0.55, Math.min(1.7, view.zoom * Math.exp(e.deltaY * (e.ctrlKey ? 0.01 : 0.0012))))
     frameCamera(); draw(); onView && onView(turned())
   }, { passive: false })
   function resetView() { view = { az: 0, tilt: null, zoom: 1 }; frameCamera(); draw(); onView && onView(false) }
@@ -364,6 +392,8 @@ export async function createBoard3D(host, assets) {
     show,
     pick,
     resetView,
+    /** whether a plain scroll zooms (a pinch always does) */
+    setWheelZoom(on) { wheelZooms = !!on },
     /** called with true when the player has turned the view, false when it is back to theirs */
     onViewChange(fn) { onView = fn },
     screenOf,
