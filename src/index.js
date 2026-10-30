@@ -107,6 +107,8 @@ const CSS = `
 .rwb-wait{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--quiet)}
 .rwb-nav{display:flex;gap:2px;margin-top:4px;align-items:center}
 .rwb-nav button{font-size:13px}
+.rwb-first,.rwb-prev,.rwb-next,.rwb-last{font-size:24px!important;line-height:1;color:#e8e2d6!important;padding:4px 12px!important;min-width:44px;border-radius:8px}
+.rwb-play .rwb-first,.rwb-play .rwb-last{font-size:12px!important;color:var(--quiet)!important;min-width:0}
 .rwb-ply{flex:1;text-align:center;color:#b9b0a1}
 .rwb-strip{display:flex;gap:1px;overflow-x:auto;margin-top:4px;padding-bottom:2px;scrollbar-width:none}
 .rwb-strip button{flex:none;padding:2px 4px;font-size:11px;color:#9d9485}
@@ -197,7 +199,7 @@ export function board(target, opts = {}) {
   const $ = (c) => host.querySelector('.rwb-' + c)
   $('title').textContent = opts.title || (play ? `You vs Stockfish, level ${level}` : [game.getHeaders().White, game.getHeaders().Black].filter(Boolean).join(' vs '))
   if (opts.analyse === false) $('analyse').style.display = 'none'
-  if (play) { $('first').textContent = 'Take back'; $('last').textContent = 'New game'; $('prev').style.display = $('next').style.display = 'none' }
+  if (play) { host.querySelector('.rwb').classList.add('rwb-play'); $('first').textContent = 'Take back'; $('last').textContent = 'New game'; $('prev').style.display = $('next').style.display = 'none' }
 
   let three = null, picked = null
   const extra = () => {
