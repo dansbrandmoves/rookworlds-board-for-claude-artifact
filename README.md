@@ -12,7 +12,7 @@ at runtime.
 ## Use it in an artifact
 
 ```html
-<script src="https://cdn.jsdelivr.net/gh/dansbrandmoves/rookworlds-board-for-claude-artifact@v1.0.0/dist/board.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/dansbrandmoves/rookworlds-board-for-claude-artifact@8465647bf68aa2ac6ec7d1f20a6497fe8288a543/dist/board.js"></script>
 <div id="board"></div>
 <script>
   const board = RookWorlds.board('#board', {
@@ -56,8 +56,9 @@ Play against Stockfish instead: `RookWorlds.board('#board', { mode: 'play', side
   it is needed, running on the viewer's own device. Nothing is sent anywhere.
 
 ## Build and release
-`npm install && npm run build` writes `dist/`, which is committed (jsDelivr serves the repo as it is). Release by
-tagging (`v1.0.1` ...) and pointing artifacts at the tag, so an artifact never changes under its owner.
+`npm install && npm run build` writes `dist/`, which is committed (jsDelivr serves the repo as it is). Artifacts point at
+an exact commit (`@<sha>`, as above), so an artifact never changes under its owner; `@main` always gives the latest.
+Tags work too (`@v1.0.0`) where they can be pushed.
 
 The board's look is the RookWorlds web app's (`components/game/Board3D.tsx` there); its 3D core is shared with the
 app's MCP board (`interfaces/mcp/board3d.src.js` there). Change them together.
