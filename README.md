@@ -12,7 +12,7 @@ at runtime.
 ## Use it in an artifact
 
 ```html
-<script src="https://cdn.jsdelivr.net/gh/dansbrandmoves/rookworlds-board-for-claude-artifact@8465647bf68aa2ac6ec7d1f20a6497fe8288a543/dist/board.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/dansbrandmoves/rookworlds-board-for-claude-artifact@2bb3401fb5bc4d3e09d5daa2a2fbcd77d6e234f5/dist/board.js"></script>
 <div id="board"></div>
 <script>
   const board = RookWorlds.board('#board', {
@@ -51,7 +51,7 @@ Play against Stockfish instead: `RookWorlds.board('#board', { mode: 'play', side
 - **The board** (`dist/board.js`, ~650KB): three.js, chess.js and the board, one plain script exposing
   `window.RookWorlds`. Pieces glide, the last move is marked in gold, arrow keys or the strip step through a game. Drag turns the board
   (and tilts it, with a mouse), pinch or the wheel zooms, "Reset view" goes back; letters and numbers follow Flip.
-- **The wood and the piece set** (`dist/assets.js`, ~5.5MB, loaded by board.js from beside itself): base64, decoded
+- **The wood and the piece set** (`dist/assets.js`, ~6.4MB, loaded by board.js from beside itself): base64, decoded
   in the page, so nothing needs network or image permissions (artifacts may have neither).
 - **Stockfish** (10, pure JavaScript) from the public `stockfish@10.0.2` npm package on jsDelivr, loaded the first time
   it is needed, running on the viewer's own device. Nothing is sent anywhere.
