@@ -84,7 +84,9 @@ export async function createBoard3D(host, assets) {
       const loader = new GLTFLoader()
       // the set's own textures are never used (the pieces are dressed in our wood): skip them, so no image URL is made
       loader.register(() => ({ name: 'rookworlds_no_textures', loadTexture: () => Promise.resolve(null) }))
-      return loader.parseAsync(assets.chess_set.buffer.slice(assets.chess_set.byteOffset, assets.chess_set.byteOffset + assets.chess_set.byteLength), '')
+      // the RookWorlds Staunton set (rook-worlds-web docs/concepts/piece-set.md); the Poly Haven set is this repo's git history
+      const set = assets.staunton
+      return loader.parseAsync(set.buffer.slice(set.byteOffset, set.byteOffset + set.byteLength), '')
     })(),
     wood(assets, 'oak_veneer_01'),
     wood(assets, 'rosewood_veneer1'),
